@@ -1,134 +1,134 @@
 # JSpeak
 
-Local-first voice typing for macOS (Apple Silicon), built as a menubar app + local speech engine.
+本地优先的 macOS 语音输入工具，基于 Apple Silicon 运行，包含菜单栏应用和本地语音引擎。
 
 [![GitHub Release](https://img.shields.io/github/v/release/aiist007/JSpeak)](https://github.com/aiist007/JSpeak/releases)
-[![Swift Version](https://img.shields.io/badge/Swift-6.0-orange)](https://swift.org)
+[![Swift 版本](https://img.shields.io/badge/Swift-6.0-orange)](https://swift.org)
 [![Python](https://img.shields.io/badge/Python-3.14-blue)](https://python.org)
 
-## Features
+## 功能特性
 
-- 🎤 **Local Speech Recognition** - MLX-Whisper running entirely on your Mac (no cloud)
-- ⌨️ **Global Hotkey** - Hold Fn or press F6 to dictate anywhere
-- 🔒 **Privacy First** - No data leaves your machine
-- 🇨🇳🇺🇸 **Bilingual Support** - Mixed Chinese/English transcription
-- 📝 **Smart Punctuation** - Automatic question detection and punctuation
-- ⚡ **Fast Warmup** - Model preloaded on launch
+- 🎤 **本地语音识别** - MLX-Whisper 完全在 Mac 上运行（不上云）
+- ⌨️ **全局热键** - 按住 Fn 或 F6 随时语音输入
+- 🔒 **隐私优先** - 数据绝不离开你的机器
+- 🇨🇳🇺🇸 **中英双语支持** - 混合中英文识别
+- 📝 **智能标点** - 自动检测问句并添加标点
+- ⚡ **快速启动** - 模型在启动时预加载
 
-## Requirements
+## 系统要求
 
-- macOS 13.0+ on Apple Silicon (M1/M2/M3)
-- Python 3.14 (optional, bundled in releases)
-- ~4GB RAM for Whisper Medium model
+- macOS 13.0+ Apple Silicon（M1/M2/M3）
+- Python 3.14（可选，发行版已内置）
+- Whisper Medium 模型约需 4GB 内存
 
-## Quick Start
+## 快速开始
 
-### Download Release (Recommended)
+### 下载发行版（推荐）
 
-1. Download `JSpeakBeta.zip` from [Releases](https://github.com/aiist007/JSpeak/releases)
-2. Extract and move `JSpeakBeta.app` to `/Applications`
-3. Grant permissions on first launch:
-   - **Microphone**
-   - **Accessibility** (for text injection)
-   - **Input Monitoring** (for global hotkey)
+1. 从 [Releases](https://github.com/aiist007/JSpeak/releases) 下载 `JSpeakBeta.zip`
+2. 解压并将 `JSpeakBeta.app` 移到 `/Applications`
+3. 首次运行时授予权限：
+   - **麦克风**
+   - **辅助功能**（用于文本注入）
+   - **输入监控**（用于全局热键）
 
-### Build from Source
+### 从源码编译
 
 ```bash
 git clone https://github.com/aiist007/JSpeak.git
 cd JSpeak
 
-# Build release bundle
+# 构建发行版
 bash scripts/package_beta.sh
 
-# Or run CLI for testing
+# 或运行 CLI 测试
 swift run jspeak -- ping
 ```
 
-## Usage
+## 使用方法
 
-1. **Start JSpeak** - Click the JSpeak icon in your menubar
-2. **Hold Fn** to record, **release Fn** to transcribe
-3. **F6** works as a fallback hotkey
-4. Dictate directly into any text field
+1. **启动 JSpeak** - 点击菜单栏的 JSpeak 图标
+2. **按住 Fn** 录音，**松开 Fn** 转写
+3. **F6** 作为备用热键
+4. 直接在任何文本框中语音输入
 
-### Commands
+### 语音命令
 
-| Phrase | Action |
-|--------|--------|
-| 换行 / new line | Insert newline |
-| 删除 / delete | Delete last word |
-| 句号 / period | End sentence |
+| 短语 | 操作 |
+|------|------|
+| 换行 / new line | 插入换行 |
+| 删除 / delete | 删除上一个词 |
+| 句号 / period | 结束句子 |
 
-## Architecture
+## 项目架构
 
 ```
 JSpeak/
-├── Sources/JSpeakIMEHost/         # Swift menubar app (AppKit)
-├── Sources/JSpeakPythonBridge/    # Swift-Python IPC bridge
-├── Sources/JSpeakCLI/             # CLI tool for testing
+├── Sources/JSpeakIMEHost/         # Swift 菜单栏应用 (AppKit)
+├── Sources/JSpeakPythonBridge/    # Swift-Python IPC 桥接
+├── Sources/JSpeakCLI/             # CLI 测试工具
 ├── Python/
-│   └── jsp_speech_service.py      # MLX-Whisper speech engine
+│   └── jsp_speech_service.py      # MLX-Whisper 语音引擎
 ├── Assets/
-│   ├── Models/whisper-medium/     # Bundled Whisper model
-│   └── PythonRuntime/             # Embedded Python 3.14
+│   ├── Models/whisper-medium/     # 内置 Whisper 模型
+│   └── PythonRuntime/             # 嵌入式 Python 3.14
 └── scripts/
-    └── package_beta.sh            # App bundling script
+    └── package_beta.sh            # 应用打包脚本
 ```
 
-## Development
+## 开发指南
 
-### Python Service (Test Independently)
+### Python 服务（独立测试）
 
 ```bash
-# Test with mic
+# 麦克风测试
 python3 Python/jsp_mic_client.py --mixed
 
-# CLI ping
+# CLI ping 测试
 python3 Python/jsp_test_client.py ping
 ```
 
-### Swift Development
+### Swift 开发
 
 ```bash
-# Debug build
+# 调试构建
 swift build
 
-# Run CLI
+# 运行 CLI
 swift run jspeak -- ping
 
-# Build release bundle
+# 构建发行版
 swift build -c release
 ```
 
-## Permissions
+## 权限说明
 
-JSpeak requires these macOS permissions:
+JSpeak 需要以下 macOS 权限：
 
-| Permission | Purpose |
-|------------|---------|
-| Microphone | Record audio for transcription |
-| Accessibility | Inject recognized text into apps |
-| Input Monitoring | Detect global Fn/F6 hotkey |
+| 权限 | 用途 |
+|------|------|
+| 麦克风 | 录制音频进行转写 |
+| 辅助功能 | 向应用注入识别文本 |
+| 输入监控 | 检测全局 Fn/F6 热键 |
 
-## Troubleshooting
+## 常见问题
 
-**Transcription fails on first run?**
-- Wait for Python environment setup (may take a minute)
-- Check Python is installed or use bundled version
+**首次运行转写失败？**
+- 等待 Python 环境配置（可能需要一分钟）
+- 检查是否安装 Python 或使用内置版本
 
-**Text not appearing?**
-- Ensure Accessibility permission is granted
-- Try clicking the target text field first
+**文本没有出现？**
+- 确保已授予辅助功能权限
+- 尝试先点击目标文本框
 
-**Fn key not working?**
-- Check System Settings → Keyboard → Keyboard Shortcuts → Function Keys
-- Use F6 as fallback
+**Fn 键不工作？**
+- 检查系统设置 → 键盘 → 键盘快捷键 → 功能键
+- 使用 F6 作为备用方案
 
-## License
+## 许可证
 
-MIT License - See [LICENSE](LICENSE) for details.
+MIT License - 详见 [LICENSE](LICENSE)。
 
-## Acknowledgments
+## 致谢
 
-- [MLX-Whisper](https://github.com/mlx-community/whisper) - Apple's MLX framework for efficient inference
+- [MLX-Whisper](https://github.com/mlx-community/whisper) - Apple MLX 高效推理框架
