@@ -1,0 +1,22 @@
+.DS_Store
+/.build
+/Packages
+xcuserdata/
+DerivedData/
+.swiftpm/configuration/registries.json
+.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+.netrc
+
+# Build artifacts
+/Build/
+
+# Large Assets
+/Assets/Models/
+/Assets/Wheelhouse/
+/Assets/PythonRuntime/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.tmp_python_runtime/

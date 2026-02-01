@@ -1,0 +1,8 @@
+# Local ASR on Apple Silicon (recommended)
+# pip install -r Python/requirements.txt
+mlx-whisper
+numpy
+huggingface_hub
+
+# Optional VAD (better endpointing)
+# webrtcvad
