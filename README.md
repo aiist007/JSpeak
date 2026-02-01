@@ -25,7 +25,7 @@
 
 ### 下载发行版（推荐）
 
-1. 从 [Releases](https://github.com/aiist007/JSpeak/releases) 下载 `JSpeakBeta.zip`
+1. 从 [Releases](https://github.com/aiist007/JSpeak/releases) 或 [夸克网盘](https://pan.quark.cn/s/bc26582e2311?pwd=4s2V) (提取码：4s2V) 下载 `JSpeakBeta.zip`
 2. 解压并将 `JSpeakBeta.app` 移到 `/Applications`
 3. 首次运行时授予权限：
    - **麦克风**
