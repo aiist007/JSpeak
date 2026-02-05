@@ -122,14 +122,6 @@ final class AgentAppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendab
 
     @MainActor
     private func handleKeyDown(keyCode: UInt16) {
-        // F6 fallback if Fn doesn't trigger in your system
-        if keyCode == 107 {
-            if isRecording {
-                stopRecording()
-            } else {
-                startRecording()
-            }
-        }
     }
 
     @MainActor

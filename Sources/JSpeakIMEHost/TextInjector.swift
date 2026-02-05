@@ -25,6 +25,21 @@ final class TextInjector {
     private func insertText(_ text: String, target: AXUIElement?) {
         NSLog("JSpeakAgent: insert len=\(text.count)")
         guard !text.isEmpty else { return }
+        
+        let frontmostApp = NSWorkspace.shared.frontmostApplication
+        let bundleId = frontmostApp?.bundleIdentifier ?? ""
+        let appName = frontmostApp?.localizedName ?? ""
+        NSLog("JSpeakAgent: frontmost app: \(appName) (\(bundleId))")
+        
+        let isElectronApp = bundleId.contains("com.microsoft.VSCode") || 
+                           bundleId.contains("ai.opencode.desktop") ||
+                           bundleId.contains("electron")
+        
+        if isElectronApp {
+            NSLog("JSpeakAgent: Detected Electron app, using Paste directly")
+            insertViaPaste(text)
+            return
+        }
 
         if insertViaAccessibility(text, target: target) {
             NSLog("JSpeakAgent: Inserted via Accessibility")
@@ -122,20 +137,28 @@ final class TextInjector {
     }
 
     private func insertViaPaste(_ text: String) {
+        NSLog("JSpeakAgent: Using Paste for \(text.count) characters")
+        
         let pasteboard = NSPasteboard.general
         let original = pasteboard.string(forType: .string)
+        
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
-
-        sendKey(keyCode: 9, flags: .maskCommand) // Cmd+V
-
+        
+        Thread.sleep(forTimeInterval: 0.05)
+        
+        sendKey(keyCode: 9, flags: .maskCommand)
+        
+        Thread.sleep(forTimeInterval: 0.2)
+        
         if let original {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                pasteboard.clearContents()
-                pasteboard.setString(original, forType: .string)
-            }
+            pasteboard.clearContents()
+            pasteboard.setString(original, forType: .string)
         }
+        
+        NSLog("JSpeakAgent: Paste completed")
     }
+
 
     private func deleteBackward(count: Int) {
         guard count > 0 else { return }
