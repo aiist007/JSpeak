@@ -6,31 +6,60 @@ final class SpeechTranscriber {
 
     // Built-in prompt for better domain term recognition.
     // Keep it short-ish: Whisper prompts help with biasing, not full corpus injection.
-    // Chinese instructions first to set language bias for punctuation.
     private static let defaultPrompt: String = {
         let s = """
-请准确转写，使用简体中文标点符号。英文单词保持原样，中英文之间加半角空格。
+Transcribe accurately. Keep punctuation and casing. Keep English terms exactly as written.
+When mixing Chinese and English/numbers, add a half-width space between them.
 
-示例：
-"你好，今天我们来讨论一下 RAG 和 embeddings 的优化方案。"
-"我的 Model Y 在 Supercharger 充电，目前 SOC 是 80%。"
-"这个项目的 EBITDA 是多少？我需要看一下估值模型。"
-"Claude Opus 的推理能力很强，适合复杂任务。"
+Key domains: AI/ML, IT/Product, Web3/Crypto, Tesla/EV/Auto, Finance.
 
-常用词汇：
-LLM RAG embeddings vector database prompt engineering fine-tuning
-RLHF DPO LoRA QLoRA Transformer attention MoE
-inference latency throughput quantization FP16 BF16 int8 int4
-PyTorch JAX ONNX Whisper MLX mlx_whisper
-OpenClaw 飞书 Feishu OpenAI Claude Opus Sonnet Perplexity Grok
-Blockchain Bitcoin BTC 比特币 Ethereum ETH 以太坊
-PoW PoS Validator EVM Solidity Gas Gwei nonce mempool
-L2 Rollup ZK zk-SNARKs zk-STARKs DeFi DEX AMM
-Airdrop NFT Mint HODL FOMO FUD MEV
-Tesla Model 3 Model Y Cybertruck Supercharger NACS CCS
-FSD Autopilot OTA BMS LFP NMC 4680 SOC SOH
-EBIT EBITDA ROE ROIC EPS P/E DCF
-资产负债表 利润表 现金流量表 自由现金流 市值 估值 波动率
+AI/ML (keep exactly):
+LLM, RAG, embeddings, vector database, prompt engineering, initial_prompt
+fine-tuning, RLHF, DPO, LoRA, QLoRA
+Transformer, attention, MoE
+inference, latency, throughput, quantization, FP16, BF16, int8, int4
+PyTorch, JAX, ONNX
+Whisper, MLX, MLX-Whisper, mlx_whisper
+
+IT/Product (keep exactly):
+OpenClaw, openclaw
+Feishu, 飞书
+OpenAI, Claude, Opus, Sonnet
+Claude Opus, Claude Sonnet
+Perplexity, Grok
+
+Web3/Crypto (prefer standard CN terms; keep exactly):
+Blockchain, DLT(分布式账本技术)
+Bitcoin(BTC, 比特币), Ethereum(ETH, 以太坊)
+PoW(工作量证明), PoS(权益证明), Validator(验证者)
+EVM, Solidity, smart contract(智能合约), ABI
+Gas, Gwei, nonce, mempool, finality
+L2(二层网络), Rollup, ZK, ZKP, zk-SNARKs, zk-STARKs
+DeFi(去中心化金融), DEX, AMM, Liquidity Pool(流动性池), slippage(滑点), Impermanent Loss(无常损失)
+Airdrop(空投), NFT, Mint(铸造), Rug Pull(跑路/抽地毯), HODL, FOMO, FUD, MEV
+
+Tesla/EV/Auto (keep exactly):
+Tesla, Model 3, Model Y, Cybertruck
+Supercharger, NACS, CCS, J1772
+FSD, Autopilot, OTA, BMS
+LFP, NMC, 4680, SOC, SOH
+Wh/km, regenerative braking, heat pump, V2G
+CAN bus, ECU, ADAS
+
+Finance (keep exactly):
+P&L, balance sheet, cash flow, free cash flow, FCF
+EBIT, EBITDA, gross margin, operating margin, net margin
+ROE, ROIC, EPS, guidance
+valuation, market cap, enterprise value, EV/EBITDA, P/E, DCF
+yield, duration, volatility, drawdown
+CPI, PPI, PMI, GDP, Fed, FOMC
+options, calls, puts, strike price, expiry, implied volatility, IV
+futures, leverage, margin, liquidation
+limit order, market order, stop loss, take profit
+
+Common Chinese finance terms:
+资产负债表，利润表，现金流量表，自由现金流，经营现金流，资本开支
+市值，估值，溢价，折价，回撤，波动率，流动性，信用利差
 """
         return s
     }()

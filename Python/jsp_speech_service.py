@@ -124,13 +124,19 @@ def _normalize_mixed_spacing(text: str) -> str:
 
 
 _RE_END_PUNCT = re.compile(r"[\.!\?\u3002\uff01\uff1f\u2026]+$")
+_RE_TRAILING_PUNCT = re.compile(r"[\.!\?\u3002\uff01\uff1f\u2026]+$")
+_RE_CN_COMMA = re.compile(r"[\uff0c,]")
+_RE_CN_CONNECTOR = re.compile(
+    r"(但是|不过|然后|所以|因此|而且|并且|同时|另外|因为|如果|虽然|接着|随后)"
+)
 
 
 def _looks_like_question(text: str) -> bool:
     t = text.strip()
     if not t:
         return False
-    if _RE_END_PUNCT.search(t):
+    t = _RE_TRAILING_PUNCT.sub("", t).strip()
+    if not t:
         return False
 
     lower = t.lower()
@@ -156,18 +162,40 @@ def _looks_like_question(text: str) -> bool:
     return False
 
 
+def _maybe_insert_cn_comma(text: str) -> str:
+    if not text:
+        return text
+    if not re.search(r"[\u4e00-\u9fff]", text):
+        return text
+    if _RE_CN_COMMA.search(text):
+        return text
+    if len(text) < 14:
+        return text
+    m = _RE_CN_CONNECTOR.search(text)
+    if not m:
+        return text
+    idx = m.start()
+    if idx <= 1:
+        return text
+    return text[:idx] + "，" + text[idx:]
+
+
 def _apply_tone_punctuation(text: str) -> str:
     t = text.strip()
     if not t:
         return t
-    if _RE_END_PUNCT.search(t):
+    has_cjk = bool(re.search(r"[\u4e00-\u9fff]", t))
+    base = _RE_TRAILING_PUNCT.sub("", t).strip()
+    if not base:
         return t
-    if _looks_like_question(t):
-        # Prefer full-width Chinese question mark if the text contains any CJK.
-        if re.search(r"[\u4e00-\u9fff]", t):
-            return t + "？"
-        return t + "?"
-    return t
+    base = _maybe_insert_cn_comma(base)
+    if _looks_like_question(base):
+        return base + ("？" if has_cjk else "?")
+    if _RE_END_PUNCT.search(t):
+        if has_cjk and t.endswith("."):
+            return base + "。"
+        return t
+    return base + ("。" if has_cjk else ".")
 
 
 def _clean_command_text(text: str) -> str:
