@@ -30,6 +30,11 @@ enum PythonRuntime {
         // Make sure pip exists in the venv even on minimal python installs.
         try run([venvPython.path, "-m", "ensurepip", "--upgrade"], env: [:], timeout: 600)
 
+        let pipEnv: [String: String] = [
+            "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+            "PIP_NO_INPUT": "1",
+        ]
+
         if let wheelhousePath, fm.fileExists(atPath: wheelhousePath) {
             // Offline install from bundled wheelhouse
             try run(
@@ -43,14 +48,13 @@ enum PythonRuntime {
                     wheelhousePath,
                     "-r",
                     requirementsPath,
-                    "--upgrade",
                 ],
-                env: [:],
+                env: pipEnv,
                 timeout: 1800
             )
         } else {
             // Online install
-            try run([venvPython.path, "-m", "pip", "install", "-r", requirementsPath, "--upgrade"], env: [:], timeout: 1800)
+            try run([venvPython.path, "-m", "pip", "install", "-r", requirementsPath], env: pipEnv, timeout: 1800)
         }
 
         return Resolved(pythonPath: venvPython.path, environment: [:])

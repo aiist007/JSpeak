@@ -299,7 +299,11 @@ final class AgentAppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendab
         var focused: CFTypeRef?
         let err = AXUIElementCopyAttributeValue(systemWide, kAXFocusedUIElementAttribute as CFString, &focused)
         if err != .success { return nil }
-        return (focused as! AXUIElement?)
+        guard let focused else { return nil }
+        if CFGetTypeID(focused) != AXUIElementGetTypeID() {
+            return nil
+        }
+        return unsafeDowncast(focused, to: AXUIElement.self)
     }
 
     private func frontmostPID() -> pid_t? {

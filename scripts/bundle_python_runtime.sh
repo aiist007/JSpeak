@@ -24,6 +24,7 @@ OUT_DIR="${ROOT_DIR}/Assets/PythonRuntime"
 
 SRC="${JSPEAK_PY_RUNTIME_SRC:-}"
 URL="${JSPEAK_PY_RUNTIME_URL:-}"
+SHA256_EXPECTED="${JSPEAK_PY_RUNTIME_SHA256:-}"
 
 TMP_DIR="${ROOT_DIR}/.tmp_python_runtime"
 
@@ -40,6 +41,18 @@ if [[ -n "${URL}" ]]; then
   ARCHIVE="${TMP_DIR}/runtime"
   echo "Downloading: ${URL}"
   curl -L --fail --retry 3 --connect-timeout 20 --max-time 0 "${URL}" -o "${ARCHIVE}"
+
+  if [[ -n "${SHA256_EXPECTED}" ]]; then
+    SHA256_ACTUAL="$(shasum -a 256 "${ARCHIVE}" | cut -d ' ' -f 1)"
+    if [[ "${SHA256_ACTUAL}" != "${SHA256_EXPECTED}" ]]; then
+      echo "SHA256 mismatch for downloaded runtime archive." >&2
+      echo "Expected: ${SHA256_EXPECTED}" >&2
+      echo "Actual:   ${SHA256_ACTUAL}" >&2
+      exit 1
+    fi
+  else
+    echo "Warning: JSPEAK_PY_RUNTIME_SHA256 not set; skipping integrity check." >&2
+  fi
 
   EXTRACT_DIR="${TMP_DIR}/extract"
   mkdir -p "${EXTRACT_DIR}"

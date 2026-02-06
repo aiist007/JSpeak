@@ -33,7 +33,6 @@ def main() -> int:
     snapshot_download(
         repo_id=repo_id,
         local_dir=str(out_dir),
-        local_dir_use_symlinks=False,
     )
     print("Done")
     return 0

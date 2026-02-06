@@ -19,6 +19,7 @@ public final class PythonSpeechService {
     private var process: Process?
     private var stdinPipe: Pipe?
     private var stdoutPipe: Pipe?
+    private let requestQueue = DispatchQueue(label: "JSpeakPythonBridge.PythonSpeechService.requestQueue")
 
     public init(config: Config) {
         self.config = config
@@ -87,12 +88,18 @@ public final class PythonSpeechService {
     }
 
     public func request(method: String, params: [String: String]?, timeoutSeconds: TimeInterval) throws -> SpeechResponse {
+        try requestQueue.sync {
+            try requestUnlocked(method: method, params: params, timeoutSeconds: timeoutSeconds)
+        }
+    }
+
+    private func requestUnlocked(method: String, params: [String: String]?, timeoutSeconds: TimeInterval) throws -> SpeechResponse {
         try start()
 
         guard let stdinHandle = stdinPipe?.fileHandleForWriting,
               let stdoutHandle = stdoutPipe?.fileHandleForReading
         else {
-            throw NSError(domain: "JSpeakPythonBridge", code: 1, userInfo: [NSLocalizedDescriptionKey: "Pipes not initialized"]) 
+            throw NSError(domain: "JSpeakPythonBridge", code: 1, userInfo: [NSLocalizedDescriptionKey: "Pipes not initialized"])
         }
 
         let id = UUID().uuidString
@@ -109,7 +116,6 @@ public final class PythonSpeechService {
         let state = State()
         let semaphore = DispatchSemaphore(value: 0)
 
-        // Non-blocking pipe read: append data and parse JSONL.
         stdoutHandle.readabilityHandler = { handle in
             let data = handle.availableData
             if data.isEmpty { return }
@@ -147,8 +153,8 @@ public final class PythonSpeechService {
             return resp
         }
         if waitResult == .timedOut {
-            throw NSError(domain: "JSpeakPythonBridge", code: 2, userInfo: [NSLocalizedDescriptionKey: "Timeout waiting for response"]) 
+            throw NSError(domain: "JSpeakPythonBridge", code: 2, userInfo: [NSLocalizedDescriptionKey: "Timeout waiting for response"])
         }
-        throw NSError(domain: "JSpeakPythonBridge", code: 3, userInfo: [NSLocalizedDescriptionKey: "No response"]) 
+        throw NSError(domain: "JSpeakPythonBridge", code: 3, userInfo: [NSLocalizedDescriptionKey: "No response"])
     }
 }

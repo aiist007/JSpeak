@@ -58,8 +58,10 @@ final class TextInjector {
         let systemWide = AXUIElementCreateSystemWide()
         var focused: CFTypeRef?
         let focusErr = AXUIElementCopyAttributeValue(systemWide, kAXFocusedUIElementAttribute as CFString, &focused)
-        if focusErr == .success, let element = focused {
-            elements.append(element as! AXUIElement)
+        if focusErr == .success, let focused {
+            if CFGetTypeID(focused) == AXUIElementGetTypeID() {
+                elements.append(unsafeDowncast(focused, to: AXUIElement.self))
+            }
         }
 
         for axElement in elements {
@@ -101,11 +103,15 @@ final class TextInjector {
         let rangeErr = AXUIElementCopyAttributeValue(axElement, kAXSelectedTextRangeAttribute as CFString, &rangeRef)
         let selectionRange: CFRange
         if rangeErr == .success, let rangeRef {
-            let axValue = (rangeRef as! AXValue)
-            if AXValueGetType(axValue) == .cfRange {
-                var r = CFRange()
-                if AXValueGetValue(axValue, .cfRange, &r) {
-                selectionRange = r
+            if CFGetTypeID(rangeRef) == AXValueGetTypeID() {
+                let axValue = unsafeDowncast(rangeRef, to: AXValue.self)
+                if AXValueGetType(axValue) == .cfRange {
+                    var r = CFRange()
+                    if AXValueGetValue(axValue, .cfRange, &r) {
+                        selectionRange = r
+                    } else {
+                        selectionRange = CFRange(location: (value as NSString).length, length: 0)
+                    }
                 } else {
                     selectionRange = CFRange(location: (value as NSString).length, length: 0)
                 }
