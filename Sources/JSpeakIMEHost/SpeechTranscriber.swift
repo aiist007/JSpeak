@@ -4,6 +4,66 @@ import JSpeakPythonBridge
 final class SpeechTranscriber {
     private let service: PythonSpeechService
 
+    // Built-in prompt for better domain term recognition.
+    // Keep it short-ish: Whisper prompts help with biasing, not full corpus injection.
+    private static let defaultPrompt: String = {
+        let s = """
+Transcribe accurately. Keep punctuation and casing. Keep English terms exactly as written.
+When mixing Chinese and English/numbers, add a half-width space between them.
+
+Key domains: AI/ML, Web3/Crypto, Tesla/EV/Auto, Finance.
+
+AI/ML (keep exactly):
+LLM, RAG, embeddings, vector database, prompt engineering, initial_prompt
+fine-tuning, RLHF, DPO, LoRA, QLoRA
+Transformer, attention, MoE
+inference, latency, throughput, quantization, FP16, BF16, int8, int4
+PyTorch, JAX, ONNX
+Whisper, MLX, MLX-Whisper, mlx_whisper
+
+Web3/Crypto (prefer standard CN terms; keep exactly):
+Blockchain, DLT(分布式账本技术)
+Bitcoin(BTC, 比特币), Ethereum(ETH, 以太坊)
+PoW(工作量证明), PoS(权益证明), Validator(验证者)
+EVM, Solidity, smart contract(智能合约), ABI
+Gas, Gwei, nonce, mempool, finality
+L2(二层网络), Rollup, ZK, ZKP, zk-SNARKs, zk-STARKs
+DeFi(去中心化金融), DEX, AMM, Liquidity Pool(流动性池), slippage(滑点), Impermanent Loss(无常损失)
+Airdrop(空投), NFT, Mint(铸造), Rug Pull(跑路/抽地毯), HODL, FOMO, FUD, MEV
+
+Tesla/EV/Auto (keep exactly):
+Tesla, Model 3, Model Y, Cybertruck
+Supercharger, NACS, CCS, J1772
+FSD, Autopilot, OTA, BMS
+LFP, NMC, 4680, SOC, SOH
+Wh/km, regenerative braking, heat pump, V2G
+CAN bus, ECU, ADAS
+
+Finance (keep exactly):
+P&L, balance sheet, cash flow, free cash flow, FCF
+EBIT, EBITDA, gross margin, operating margin, net margin
+ROE, ROIC, EPS, guidance
+valuation, market cap, enterprise value, EV/EBITDA, P/E, DCF
+yield, duration, volatility, drawdown
+CPI, PPI, PMI, GDP, Fed, FOMC
+options, calls, puts, strike price, expiry, implied volatility, IV
+futures, leverage, margin, liquidation
+limit order, market order, stop loss, take profit
+
+Common Chinese finance terms:
+资产负债表，利润表，现金流量表，自由现金流，经营现金流，资本开支
+市值，估值，溢价，折价，回撤，波动率，流动性，信用利差
+"""
+        return s
+    }()
+
+    private static func promptForASR() -> String {
+        // Defensive: keep prompt size bounded.
+        let maxChars = 2000
+        if defaultPrompt.count <= maxChars { return defaultPrompt }
+        return String(defaultPrompt.prefix(maxChars))
+    }
+
     init(pythonPath: String? = nil, scriptPath: String? = nil) {
         let resolvedScript = Self.resolveScriptPath(override: scriptPath)
         let requirements = Self.resolveRequirementsPath()
@@ -103,6 +163,7 @@ final class SpeechTranscriber {
             startParams["model_path"] = modelPath
         }
         if mixed { startParams["mixed"] = "true" }
+        startParams["prompt"] = Self.promptForASR()
 
         _ = try service.request(method: "stream_start", params: startParams, timeoutSeconds: 300)
 
@@ -136,6 +197,7 @@ final class SpeechTranscriber {
             startParams["model_path"] = modelPath
         }
         if mixed { startParams["mixed"] = "true" }
+        startParams["prompt"] = Self.promptForASR()
 
         _ = try service.request(method: "stream_start", params: startParams, timeoutSeconds: 300)
         return sessionId
@@ -176,6 +238,7 @@ final class SpeechTranscriber {
                     }
                 }
                 if mixed { startParams["mixed"] = "true" }
+                startParams["prompt"] = Self.promptForASR()
 
                 _ = try self.service.request(method: "stream_start", params: startParams, timeoutSeconds: 300)
                 _ = try self.service.request(method: "stream_finalize", params: ["session_id": sessionId], timeoutSeconds: 300)
