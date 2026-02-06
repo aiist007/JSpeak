@@ -46,6 +46,14 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional, Tuple
 
+try:
+    from user_lexicon import UserLexicon
+
+    _USER_LEXICON_AVAILABLE = True
+except ImportError:
+    UserLexicon = None
+    _USER_LEXICON_AVAILABLE = False
+
 
 def _now() -> float:
     return time.time()
@@ -512,6 +520,10 @@ class Service:
     def __init__(self):
         self.engine = WhisperEngine()
         self.sessions: Dict[str, StreamSession] = {}
+        if _USER_LEXICON_AVAILABLE and UserLexicon is not None:
+            self.user_lexicon = UserLexicon()
+        else:
+            self.user_lexicon = None
 
     def handle(self, req: dict) -> dict:
         req_id = req.get("id") or str(uuid.uuid4())
@@ -779,6 +791,10 @@ class Service:
                 if actions is None:
                     text = _apply_tone_punctuation(text)
                     actions = [{"type": "insert", "text": text}] if text else []
+
+                if self.user_lexicon and text and not _command_actions(text):
+                    self.user_lexicon.record_transcript(text)
+
                 return _ok(
                     req_id, {"session_id": session_id, "text": text, "actions": actions}
                 )
