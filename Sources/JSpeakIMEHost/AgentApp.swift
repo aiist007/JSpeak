@@ -41,6 +41,7 @@ final class AgentAppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendab
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Toggle Dictation (Fn)", action: #selector(toggleMenu), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Permissions…", action: #selector(openPermissionsHelp), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Open Prompt…", action: #selector(openPromptFile), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(quit), keyEquivalent: "q"))
         item.menu = menu
@@ -59,6 +60,15 @@ final class AgentAppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendab
         } else {
             startRecording()
         }
+    }
+
+    @MainActor
+    @objc private func openPromptFile() {
+        guard let url = SpeechTranscriber.ensurePromptFileExists() else {
+            showAlert(title: "无法打开词库", message: "创建/打开 prompt.txt 失败。", openURL: nil)
+            return
+        }
+        NSWorkspace.shared.open(url)
     }
 
     @MainActor

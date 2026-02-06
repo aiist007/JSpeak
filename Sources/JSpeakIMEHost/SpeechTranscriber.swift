@@ -64,11 +64,52 @@ Common Chinese finance terms:
         return s
     }()
 
-    private static func promptForASR() -> String {
-        // Defensive: keep prompt size bounded.
-        let maxChars = 2000
-        if defaultPrompt.count <= maxChars { return defaultPrompt }
-        return String(defaultPrompt.prefix(maxChars))
+    private static let promptMaxChars = 2000
+
+    private static func promptFileURL() throws -> URL {
+        let fm = FileManager.default
+        let base = try fm.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )
+        let dir = base.appendingPathComponent("JSpeak", isDirectory: true)
+        try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent("prompt.txt", isDirectory: false)
+    }
+
+    @discardableResult
+    static func ensurePromptFileExists() -> URL? {
+        do {
+            let url = try promptFileURL()
+            if !FileManager.default.fileExists(atPath: url.path) {
+                try defaultPrompt.write(to: url, atomically: true, encoding: .utf8)
+            }
+            return url
+        } catch {
+            return nil
+        }
+    }
+
+    private static func loadPromptForASR() -> String {
+        let fallback = defaultPrompt
+        do {
+            let url = try promptFileURL()
+            if !FileManager.default.fileExists(atPath: url.path) {
+                try fallback.write(to: url, atomically: true, encoding: .utf8)
+            }
+
+            let raw = try String(contentsOf: url, encoding: .utf8)
+            let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            let effective = text.isEmpty ? fallback : text
+
+            if effective.count <= promptMaxChars { return effective }
+            return String(effective.prefix(promptMaxChars))
+        } catch {
+            if fallback.count <= promptMaxChars { return fallback }
+            return String(fallback.prefix(promptMaxChars))
+        }
     }
 
     init(pythonPath: String? = nil, scriptPath: String? = nil) {
@@ -90,6 +131,9 @@ Common Chinese finance terms:
 
         let config = PythonSpeechService.Config(pythonPath: resolvedPython, scriptPath: resolvedScript, environment: pythonEnv)
         self.service = PythonSpeechService(config: config)
+
+        // Create prompt file on first run so users can edit it.
+        Self.ensurePromptFileExists()
     }
 
     private static func resolveLocalModelPath() -> String? {
@@ -170,7 +214,7 @@ Common Chinese finance terms:
             startParams["model_path"] = modelPath
         }
         if mixed { startParams["mixed"] = "true" }
-        startParams["prompt"] = Self.promptForASR()
+        startParams["prompt"] = Self.loadPromptForASR()
 
         _ = try service.request(method: "stream_start", params: startParams, timeoutSeconds: 300)
 
@@ -204,7 +248,7 @@ Common Chinese finance terms:
             startParams["model_path"] = modelPath
         }
         if mixed { startParams["mixed"] = "true" }
-        startParams["prompt"] = Self.promptForASR()
+        startParams["prompt"] = Self.loadPromptForASR()
 
         _ = try service.request(method: "stream_start", params: startParams, timeoutSeconds: 300)
         return sessionId
@@ -245,7 +289,7 @@ Common Chinese finance terms:
                     }
                 }
                 if mixed { startParams["mixed"] = "true" }
-                startParams["prompt"] = Self.promptForASR()
+                startParams["prompt"] = Self.loadPromptForASR()
 
                 _ = try self.service.request(method: "stream_start", params: startParams, timeoutSeconds: 300)
                 _ = try self.service.request(method: "stream_finalize", params: ["session_id": sessionId], timeoutSeconds: 300)
