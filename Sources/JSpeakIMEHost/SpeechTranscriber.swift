@@ -11,7 +11,7 @@ final class SpeechTranscriber {
 Transcribe accurately. Keep punctuation and casing. Keep English terms exactly as written.
 When mixing Chinese and English/numbers, add a half-width space between them.
 
-Key domains: AI/ML, Web3/Crypto, Tesla/EV/Auto, Finance.
+Key domains: AI/ML, IT/Product, Web3/Crypto, Tesla/EV/Auto, Finance.
 
 AI/ML (keep exactly):
 LLM, RAG, embeddings, vector database, prompt engineering, initial_prompt
@@ -20,6 +20,13 @@ Transformer, attention, MoE
 inference, latency, throughput, quantization, FP16, BF16, int8, int4
 PyTorch, JAX, ONNX
 Whisper, MLX, MLX-Whisper, mlx_whisper
+
+IT/Product (keep exactly):
+OpenClaw, openclaw
+Feishu, 飞书
+OpenAI, Claude, Opus, Sonnet
+Claude Opus, Claude Sonnet
+Perplexity, Grok
 
 Web3/Crypto (prefer standard CN terms; keep exactly):
 Blockchain, DLT(分布式账本技术)
